@@ -34,7 +34,8 @@ def get_redshift(objid):
 
 
 def sdss_data(ras,decs,rad):
-    """ Query within search radius, rad entered in degrees """
+    """ Query within search radius, rad entered in arcseconds
+    Note that this won't work at all if it's farther than a degree away """
     sources = coords.SkyCoord(ras, decs, unit='deg')
     nsources = len(sources)
     u = np.zeros(nsources)
@@ -49,8 +50,8 @@ def sdss_data(ras,decs,rad):
     for ii in np.arange(nsources):
         xid = SDSS.query_sql(
                 """ SELECT n.objID,n.distance\
-                    FROM dbo.fGetNearestObjEq(%s,%s,%s) as n""" %(
-                        ras[ii],decs[ii],rad))
+                    FROM dbo.fGetNearestObjEq(%s,%s,1) as n""" %(
+                        ras[ii],decs[ii])
         if xid is None:
             uval = None
             gval = None
@@ -64,7 +65,7 @@ def sdss_data(ras,decs,rad):
             objid = xid['objID'].data[0]
             sep = xid['distance'].data[0]
             sepval = sep*60
-            if sepval <= 3: # within 3 arcseconds
+            if sepval <= rad: # within the provided search radius
                 uval,gval,rval,ival,zval = get_colors(objid)
                 redshift,redshifterr = get_redshift(objid)
         u[ii] = uval
