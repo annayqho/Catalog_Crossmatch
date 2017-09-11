@@ -33,7 +33,8 @@ def get_redshift(objid):
     return out['z'], out['zErr']
 
 
-def sdss_data(ras,decs):
+def sdss_data(ras,decs,rad):
+    """ Query within search radius, rad entered in degrees """
     sources = coords.SkyCoord(ras, decs, unit='deg')
     nsources = len(sources)
     u = np.zeros(nsources)
@@ -48,19 +49,30 @@ def sdss_data(ras,decs):
     for ii in np.arange(nsources):
         xid = SDSS.query_sql(
                 """ SELECT n.objID,n.distance\
-                    FROM dbo.fGetNearestObjEq(%s,%s,5) as n""" %(ras[ii],decs[ii]))
-        objid = xid['objID'].data[0]
-        sep = xid['distance'].data[0]
-        if sep*60 <= 3: # within 3 arcseconds
-            print(objid)
-            uval,gval,rval,ival,zval = get_colors(objid)
-            redshift,redshifterr = get_redshift(objid)
-            u[ii] = uval
-            g[ii] = gval
-            r[ii] = rval
-            i[ii] = ival
-            z[ii] = zval
-            redshifts[ii] = redshift
-            redshifterrs[ii] = redshifterr
-            seps[ii] = sep*60
+                    FROM dbo.fGetNearestObjEq(%s,%s,%s) as n""" %(
+                        ras[ii],decs[ii],rad))
+        if xid is None:
+            uval = None
+            gval = None
+            rval = None
+            ival = None
+            zval = None
+            redshift = None
+            redshifterr = None
+            sepval = None
+        else:
+            objid = xid['objID'].data[0]
+            sep = xid['distance'].data[0]
+            sepval = sep*60
+            if sepval <= 3: # within 3 arcseconds
+                uval,gval,rval,ival,zval = get_colors(objid)
+                redshift,redshifterr = get_redshift(objid)
+        u[ii] = uval
+        g[ii] = gval
+        r[ii] = rval
+        i[ii] = ival
+        z[ii] = zval
+        redshifts[ii] = redshift
+        redshifterrs[ii] = redshifterr
+        seps[ii] = sepval
     return u,g,r,i,z,redshifts,redshifterrs,seps
