@@ -16,6 +16,15 @@ def get_colors(objid):
     return u,g,r,i,z
 
 
+def get_type(objid):
+    stmt = "SELECT type FROM PhotoPrimary as p\
+            WHERE p.objid = '%s'" %objid
+    out = SDSS.query_sql(stmt)
+    if out['type'] == 3:
+        return 'galaxy'
+    elif out['type'] == 6:
+        return 'star'
+
 def get_redshift(objid):
     """ Return the best redshift, from photo or spec """
     stmt = "SELECT z,zErr from Photoz as p\
@@ -51,17 +60,16 @@ def sdss_data(ras,decs,rad):
         xid = SDSS.query_sql(
                 """ SELECT n.objID,n.distance\
                     FROM dbo.fGetNearestObjEq(%s,%s,1) as n""" %(
-                        ras[ii],decs[ii])
-        if xid is None:
-            uval = None
-            gval = None
-            rval = None
-            ival = None
-            zval = None
-            redshift = None
-            redshifterr = None
-            sepval = None
-        else:
+                        ras[ii],decs[ii]))
+        uval = None
+        gval = None
+        rval = None
+        ival = None
+        zval = None
+        redshift = None
+        redshifterr = None
+        sepval = None
+        if xid is not None:
             objid = xid['objID'].data[0]
             sep = xid['distance'].data[0]
             sepval = sep*60
