@@ -25,6 +25,7 @@ def get_type(objid):
     elif out['type'] == 6:
         return 'star'
 
+
 def get_redshift(objid):
     """ Return the best redshift, from photo or spec """
     stmt = "SELECT z,zErr from Photoz as p\
@@ -40,6 +41,20 @@ def get_redshift(objid):
     else:
         return -9999,-9999
     return out['z'], out['zErr']
+
+
+def get_objid(ra, dec, rad):
+    """ For ra and dec within rad, get SDSS ID of nearest object """
+    xid = SDSS.query_sql(
+        """ SELECT n.objID,n.distance\
+            FROM dbo.fGetNearestObjEq(%s,%s,1) as n""" %(ra,dec))
+    if xid is not None:
+        objid = xid['objID'].data[0]
+        sep = xid['distance'].data[0]
+        sepval = sep*60
+        if sepval <= rad: # within the provided search radius
+            return objid
+    return None
 
 
 def sdss_data(ras,decs,rad):
@@ -58,10 +73,7 @@ def sdss_data(ras,decs,rad):
     seps = np.zeros(nsources)
 
     for ii in np.arange(nsources):
-        xid = SDSS.query_sql(
-                """ SELECT n.objID,n.distance\
-                    FROM dbo.fGetNearestObjEq(%s,%s,1) as n""" %(
-                        ras[ii],decs[ii]))
+        objid = get_objid(ras[ii], decs[ii], rad)
         uval = None
         gval = None
         rval = None
@@ -71,14 +83,10 @@ def sdss_data(ras,decs,rad):
         redshifterr = None
         sepval = None
         typ = None
-        if xid is not None:
-            objid = xid['objID'].data[0]
-            sep = xid['distance'].data[0]
-            sepval = sep*60
-            if sepval <= rad: # within the provided search radius
-                uval,gval,rval,ival,zval = get_colors(objid)
-                redshift,redshifterr = get_redshift(objid)
-                typ = get_type(objid)
+        if objid is not None:
+            uval,gval,rval,ival,zval = get_colors(objid)
+            redshift,redshifterr = get_redshift(objid)
+            typ = get_type(objid)
         u[ii] = uval
         g[ii] = gval
         r[ii] = rval
