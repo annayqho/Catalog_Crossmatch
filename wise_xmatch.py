@@ -15,11 +15,11 @@ def wise_colors(ras,decs):
     sep = np.zeros(nsources)
 
     for ii in np.arange(nsources):
-        out_raw = Vizier.query_region(sources[ii], radius='3arcsec', catalog='ALLWISE')
+        out_raw = Vizier.query_region(
+                sources[ii], radius='3arcsec', catalog='ALLWISE')
         if len(out_raw) > 0:
             out = out_raw[0]
             choose = np.argmin(out['_r'])
-            print(out['W1mag'][choose])
             w1[ii] = out['W1mag'][choose]
             w1_err[ii] = out['e_W1mag'][choose]
             w2[ii] = out['W2mag'][choose]

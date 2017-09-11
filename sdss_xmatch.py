@@ -53,8 +53,8 @@ def get_objid(ra, dec, rad):
         sep = xid['distance'].data[0]
         sepval = sep*60
         if sepval <= rad: # within the provided search radius
-            return objid
-    return None
+            return objid,sepval
+    return None,None
 
 
 def sdss_data(ras,decs,rad):
