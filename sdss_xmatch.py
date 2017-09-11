@@ -54,6 +54,7 @@ def sdss_data(ras,decs,rad):
     z = np.zeros(nsources)
     redshifts = np.zeros(nsources)
     redshifterrs = np.zeros(nsources)
+    types = np.zeros(nsources, dtype=str)
     seps = np.zeros(nsources)
 
     for ii in np.arange(nsources):
@@ -69,6 +70,7 @@ def sdss_data(ras,decs,rad):
         redshift = None
         redshifterr = None
         sepval = None
+        typ = None
         if xid is not None:
             objid = xid['objID'].data[0]
             sep = xid['distance'].data[0]
@@ -76,6 +78,7 @@ def sdss_data(ras,decs,rad):
             if sepval <= rad: # within the provided search radius
                 uval,gval,rval,ival,zval = get_colors(objid)
                 redshift,redshifterr = get_redshift(objid)
+                typ = get_type(objid)
         u[ii] = uval
         g[ii] = gval
         r[ii] = rval
@@ -83,5 +86,6 @@ def sdss_data(ras,decs,rad):
         z[ii] = zval
         redshifts[ii] = redshift
         redshifterrs[ii] = redshifterr
+        types[ii] = typ
         seps[ii] = sepval
-    return u,g,r,i,z,redshifts,redshifterrs,seps
+    return u,g,r,i,z,redshifts,redshifterrs,seps,types
