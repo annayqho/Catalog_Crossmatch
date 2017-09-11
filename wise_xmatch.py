@@ -6,25 +6,30 @@ from astropy.table import Table
 def wise_colors(ras,decs):
     sources = coords.SkyCoord(ras, decs, unit='deg')
     nsources = len(sources)
-    w1 = np.zeros(nsources)
-    w2 = np.zeros(nsources)
-    w3 = np.zeros(nsources)
-    w1_err = np.zeros(nsources)
-    w2_err = np.zeros(nsources)
-    w3_err = np.zeros(nsources)
-    sep = np.zeros(nsources)
+    out_raw = Vizier.query_region(
+            sources, radius='3arcsec', catalog='ALLWISE')
+    w1s = np.zeros(nsources)
+    w2s = np.zeros(nsources)
+    w3s = np.zeros(nsources)
+    w4s = np.zeros(nsources)
+    seps = np.zeros(nsources)
 
-    for ii in np.arange(nsources):
-        out_raw = Vizier.query_region(
-                sources[ii], radius='3arcsec', catalog='ALLWISE')
-        if len(out_raw) > 0:
-            out = out_raw[0]
-            choose = np.argmin(out['_r'])
-            w1[ii] = out['W1mag'][choose]
-            w1_err[ii] = out['e_W1mag'][choose]
-            w2[ii] = out['W2mag'][choose]
-            w2_err[ii] = out['e_W2mag'][choose]
-            w3[ii] = out['W3mag'][choose]
-            w3_err[ii] = out['e_W3mag'][choose]
-            sep[ii] = out['_r'][choose]
-    return w1,w2,w3,w1_err,w2_err,w3_err,sep
+    if out is not None:
+        out = out_raw[0]
+        inds = np.array(out['_q']-1)
+        
+        w1s[inds] = out['W1mag']
+        w1s[w1s==0] = None
+        w2s[inds] = out['W2mag']
+        w2s[w2s==0] = None
+        w3s[inds] = out['W3mag']
+        w3s[w3s==0] = None
+        w4s[inds] = out['W4mag']
+        w4s[w4s==0] = None
+        seps[inds] = out['_r']
+        seps[seps==0] = None
+        return w1s,w2s,w3s,w4s,seps
+
+    else:
+        return None
+
