@@ -2,7 +2,8 @@ import numpy as np
 from astroquery.sdss import SDSS
 from astropy import coordinates as coords
 from astropy.table import Table
-
+import astropy.units as u
+from astropy.table import Table,Column
 
 def get_colors(objid):
     stmt = "SELECT u,g,r,i,z FROM PhotoPrimary as p\
@@ -14,16 +15,6 @@ def get_colors(objid):
     i = float(out['i'])
     z = float(out['z'])
     return u,g,r,i,z
-
-
-def get_type(objid):
-    stmt = "SELECT type FROM PhotoPrimary as p\
-            WHERE p.objid = '%s'" %objid
-    out = SDSS.query_sql(stmt)
-    if out['type'] == 3:
-        return 'galaxy'
-    elif out['type'] == 6:
-        return 'star'
 
 
 def get_redshift(objid):
@@ -43,18 +34,24 @@ def get_redshift(objid):
     return out['z'], out['zErr']
 
 
-def get_objid(ra, dec, rad):
+def get_type(ras, decs, rad):
     """ For ra and dec within rad, get SDSS ID of nearest object """
-    xid = SDSS.query_sql(
-        """ SELECT n.objID,n.distance\
-            FROM dbo.fGetNearestObjEq(%s,%s,1) as n""" %(ra,dec))
-    if xid is not None:
-        objid = xid['objID'].data[0]
-        sep = xid['distance'].data[0]
-        sepval = sep*60
-        if sepval <= rad: # within the provided search radius
-            return objid,sepval
-    return None,None
+    tosearch = coords.SkyCoord(ras, decs, unit='deg')
+    nsources = len(ras)
+    out = SDSS.query_crossid(
+            tosearch, photoobj_fields=['ra,dec,type'], radius=3*u.arcsec)
+    # note that these are zero-indexed
+    inds = np.array(
+            [val.split("_")[1] for val in out['obj_id'].astype(str)]).astype(int)
+    found = coords.SkyCoord(out['ra'], out['dec'], unit='deg')
+    dist_deg = found.separation(tosearch[inds])
+    dist_arcsec = dist_deg.arcsec
+    dist = np.zeros(nsources)
+    dist[inds] = dist_arcsec
+    dist_col = Column(name="Separation", data=dist)
+    out.add_column(dist_col)
+    return out['type1', 'Separation']
+    
 
 
 def sdss_data(ras,decs,rad):
