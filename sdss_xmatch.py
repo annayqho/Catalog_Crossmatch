@@ -39,18 +39,18 @@ def get_type(ras, decs, rad):
     tosearch = coords.SkyCoord(ras, decs, unit='deg')
     nsources = len(ras)
     out = SDSS.query_crossid(
-            tosearch, photoobj_fields=['ra,dec,type'], radius=3*u.arcsec)
+            tosearch, photoobj_fields=['ra,dec,type'], radius=rad*u.arcsec)
     # note that these are zero-indexed
     inds = np.array(
-            [val.split("_")[1] for val in out['obj_id'].astype(str)]).astype(int)
+            [val.split("_")[1] for val in \
+            out['obj_id'].astype(str)]).astype(int)
     found = coords.SkyCoord(out['ra'], out['dec'], unit='deg')
     dist_deg = found.separation(tosearch[inds])
     dist_arcsec = dist_deg.arcsec
-    dist = np.zeros(nsources)
-    dist[inds] = dist_arcsec
-    dist_col = Column(name="Separation", data=dist)
-    out.add_column(dist_col)
-    return out['type1', 'Separation']
+    dist_col = Column(name="Separation", data=dist_arcsec)
+    ind_col = Column(name="Index", data=inds)
+    out.add_columns([ind_col, dist_col])
+    return out['Index', 'type1', 'Separation']
     
 
 
