@@ -27,7 +27,8 @@ def run_query(pagenum):
 def make_table():
     pagenum = 0
     out = run_query(pagenum)
-    headers = np.array([val.replace('"', '') for val in out[0].split(',')])
+    #headers = np.array([val.replace('"', '') for val in out[0].split(',')])
+    headers = np.array(out[0].split(','))
     ncols = len(headers)
     datatype = np.array([headers.dtype]*ncols) # for use in table initiation
     nrows = len(out[1:])
@@ -37,7 +38,7 @@ def make_table():
     while nrows > 0:
         for rownum in np.arange(1,nrows-1):
             row = np.array([val.replace('"', '') 
-                            for val in out[rownum].split(',')], dtype=np.string)
+                            for val in out[rownum].split(',')])
             t.add_row(row)
         pagenum += 1
         out = run_query(pagenum)
@@ -47,7 +48,7 @@ def make_table():
 
 
 if __name__=="__main__":
-    make_table()
-    #dat = Table.read("tns_query_output.csv", format="csv")
+    #make_table()
+    dat = Table.read("tns_query_output.csv", dtype="ascii.fast_csv")
     #redshift = list(filter(None, dat['redshift']))
 
