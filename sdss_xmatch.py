@@ -37,7 +37,6 @@ def get_redshift(objid):
 def get_type(ras, decs, rad):
     """ For ra and dec within rad, get SDSS ID of nearest object """
     tosearch = coords.SkyCoord(ras, decs, unit='deg')
-    nsources = len(ras)
     out = SDSS.query_crossid(
             tosearch, photoobj_fields=['ra,dec,type'], radius=rad*u.arcsec)
     # note that these are zero-indexed
@@ -57,6 +56,7 @@ def get_type(ras, decs, rad):
 def sdss_data(ras,decs,rad):
     """ Query within search radius, rad entered in arcseconds
     Note that this won't work at all if it's farther than a degree away """
+    print(ras)
     sources = coords.SkyCoord(ras, decs, unit='deg')
     nsources = len(sources)
     u = np.zeros(nsources)
@@ -70,7 +70,7 @@ def sdss_data(ras,decs,rad):
     seps = np.zeros(nsources)
 
     for ii in np.arange(nsources):
-        objid = get_objid(ras[ii], decs[ii], rad)
+        ind, typ, sep = get_type(ras[ii], decs[ii], rad)
         uval = None
         gval = None
         rval = None
