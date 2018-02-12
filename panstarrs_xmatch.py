@@ -32,7 +32,7 @@ def is_star(ra_deg, dec_deg, rad_deg, mindet=1,
     # parse local file into astropy.table object 
     data = parse_single_table('panstarrs.xml')
     tab = data.to_table(use_names_over_ids=True) 
-    if len(tab['objName']):
+    if len(tab['objName'])>0:
         mag_names = ['g', 'r', 'i', 'z', 'y']
         mags= [tab['gMeanPSFMag'], tab['rMeanPSFMag'], tab['iMeanPSFMag'], tab['zMeanPSFMag'], tab['yMeanPSFMag']]
         print(len(mags))
