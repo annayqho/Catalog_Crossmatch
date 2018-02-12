@@ -39,5 +39,6 @@ def is_star(ra_deg, dec_deg, rad_deg, mindet=1,
         choose = np.argmin(mags)
         is_star = mags[choose] - tab['%sMeanKronMag' %mag_names[choose]] < 0
         sep = tab["Ang Sep (')"] * 60 # in arcsec
-        return is_star.data[0],float(sep)
+        choose = np.argmin(sep)
+        return is_star.data[choose],float(sep[choose])
     return False
