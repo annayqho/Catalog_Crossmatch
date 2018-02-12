@@ -1,10 +1,11 @@
 import requests 
+import numpy as np
 from astropy.io.votable import parse_single_table 
 from astropy.table import Table,Column
  
 # from https://michaelmommert.wordpress.com/2017/02/13/accessing-the-gaia-and-pan-starrs-catalogs-using-python/
 
-def panstarrs_query(ra_deg, dec_deg, rad_deg, mindet=1, 
+def is_star(ra_deg, dec_deg, rad_deg, mindet=1, 
                     maxsources=10000,
                     server=('https://archive.stsci.edu/'+
                             'panstarrs/search.php')): 
@@ -15,7 +16,7 @@ def panstarrs_query(ra_deg, dec_deg, rad_deg, mindet=1,
                 mindet: minimum number of detection (optional)
                 maxsources: maximum number of sources
                 server: servername
-    returns: astropy.table object
+    returns: whether source is a star
     """
     r = requests.get(server, 
     params= {'RA': ra_deg, 'DEC': dec_deg, 
@@ -31,14 +32,12 @@ def panstarrs_query(ra_deg, dec_deg, rad_deg, mindet=1,
     # parse local file into astropy.table object 
     data = parse_single_table('panstarrs.xml')
     tab = data.to_table(use_names_over_ids=True) 
-    g = tab['gMeanPSFMag'] - tab['gMeanKronMag']
-    r = tab['rMeanPSFMag'] - tab['rMeanKronMag']
-    i = tab['iMeanPSFMag'] - tab['iMeanKronMag']
-    z = tab['zMeanPSFMag'] - tab['zMeanKronMag']
-    y = tab['yMeanPSFMag'] - tab['yMeanKronMag']
-    sep = tab["Ang Sep (')"] * 60 # in arcsec
-    t = Table(
-        [ra_deg,dec_deg,g,r,i,z,y,sep], 
-        names=['RA', 'Dec', 'gval', 'rval', 'ival', 'zval', 'yval', 'Sep'])
-    return t
-
+    if len(tab['objName']):
+        mag_names = ['g', 'r', 'i', 'z', 'y']
+        mags= [tab['gMeanPSFMag'], tab['rMeanPSFMag'], tab['iMeanPSFMag'], tab['zMeanPSFMag'], tab['yMeanPSFMag']]
+        print(len(mags))
+        choose = np.argmin(mags)
+        is_star = mags[choose] - tab['%sMeanKronMag' %mag_names[choose]] < 0
+        sep = tab["Ang Sep (')"] * 60 # in arcsec
+        return is_star,sep
+    return False
